@@ -1,0 +1,34 @@
+# $ riemann-elasticsearch --help
+# Options:
+#   -h, --host=<s>            Riemann host (default: 127.0.0.1)
+#   -p, --port=<i>            Riemann port (default: 5555)
+#   -e, --event-host=<s>      Event hostname
+#   -i, --interval=<i>        Seconds between updates (default: 5)
+#   -t, --tag=<s>             Tag to add to events
+#   -l, --ttl=<i>             TTL for events
+#   -a, --attribute=<s>       Attribute to add to the event
+#   -m, --timeout=<i>         Timeout (in seconds) when waiting for
+#                             acknowledgements (default: 30)
+#   -c, --tcp, --no-tcp       Use TCP transport instead of UDP (improves
+#                             reliability, slight overhead. (Default: true)
+#   -r, --read-timeout=<i>    Faraday read timeout (default: 2)
+#   -o, --open-timeout=<i>    Faraday open timeout (default: 1)
+#   -s, --es-host=<s>         Elasticsearch host (default: localhost)
+#   --es-port=<i>             Elasticsearch port (default: 9200)
+#   --help                    Show this message
+
+- name: Enable riemann-elasticsearch service
+  when: ansible_os_family == "Debian"
+  template: src="tool-upstart.conf.j2" dest=/etc/init/riemann-elasticsearch.conf owner=root group=root mode=0644
+  with_items:
+    - description: riemann-elasticsearch
+      command: |
+        riemann-elasticsearch                            \
+        --host=`cat {{ riemann_conf_dir }}/server_host`  \
+        --port=`cat {{ riemann_conf_dir }}/server_port`  \
+        --event-host=`hostname`                          \
+        --es-host={{ elasticsearch_host }}
+        
+- name: Configure riemann-elasticsearch service
+  service: name=riemann-elasticsearch state=started enabled=yes
+  

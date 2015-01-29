@@ -1,0 +1,45 @@
+---
+
+- name: Create configuration directory
+  file: path={{ riemann_conf_dir }} state=directory owner=root group=root mode=0755
+  tags:
+    - riemann-client
+
+- name: Create server host file
+  copy: content="{{ riemann_server_host }}" dest="{{ riemann_conf_dir }}/server_host" owner=root group=root mode=0755
+  tags:
+    - riemann-client
+
+- name: Create server port file
+  copy: content="{{ riemann_server_port }}" dest="{{ riemann_conf_dir }}/server_port" owner=root group=root mode=0755
+  tags:
+    - riemann-client
+
+- name: Install Ruby client
+  gem: name=riemann-client state=present
+  tags:
+    - riemann-client
+    
+- name: Install Riemann tools
+  gem: name=riemann-tools state=present
+  tags:
+    - riemann-client
+
+- include: health.yml
+  when: riemann_tool_health
+  tags:
+    - riemann-input
+    - system_metrics
+    
+- include: elasticsearch.yml
+  when: riemann_tool_elasticsearch
+  tags:
+    - riemann-input
+    - elasticsearch
+
+- include: nginx.yml
+  when: riemann_tool_nginx
+  tags:
+    - riemann-input
+    - nginx
+    

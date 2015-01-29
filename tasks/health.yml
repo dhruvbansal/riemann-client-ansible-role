@@ -1,0 +1,46 @@
+# $ riemann-health --help
+# Options:
+#   -h, --host=<s>              Riemann host (default: 127.0.0.1)
+#   -p, --port=<i>              Riemann port (default: 5555)
+#   -e, --event-host=<s>        Event hostname
+#   -i, --interval=<i>          Seconds between updates (default: 5)
+#   -t, --tag=<s>               Tag to add to events
+#   -l, --ttl=<i>               TTL for events
+#   -a, --attribute=<s>         Attribute to add to the event
+#   -m, --timeout=<i>           Timeout (in seconds) when waiting for
+#                               acknowledgements (default: 30)
+#   -c, --tcp, --no-tcp         Use TCP transport instead of UDP (improves
+#                               reliability, slight overhead. (Default: true)
+#   -u, --cpu-warning=<f>       CPU warning threshold (fraction of total jiffies)
+#                               (default: 0.9)
+#   -r, --cpu-critical=<f>      CPU critical threshold (fraction of total
+#                               jiffies) (default: 0.95)
+#   -d, --disk-warning=<f>      Disk warning threshold (fraction of space used)
+#                               (default: 0.9)
+#   -s, --disk-critical=<f>     Disk critical threshold (fraction of space used)
+#                               (default: 0.95)
+#   -o, --load-warning=<i>      Load warning threshold (load average / core)
+#                               (default: 3)
+#   --load-critical=<i>         Load critical threshold (load average / core)
+#                               (default: 8)
+#   -y, --memory-warning=<f>    Memory warning threshold (fraction of RAM)
+#                               (default: 0.85)
+#   --memory-critical=<f>       Memory critical threshold (fraction of RAM)
+#                               (default: 0.95)
+#   -k, --checks=<s+>           A list of checks to run. (Default: cpu, load,
+#                               memory, disk)
+#   --help                      Show this message
+
+- name: Enable riemann-health service
+  when: ansible_os_family == "Debian"
+  template: src="tool-upstart.conf.j2" dest=/etc/init/riemann-health.conf owner=root group=root mode=0644
+  with_items:
+    - description: riemann-health
+      command: |
+        riemann-health  \
+        --host=`cat {{ riemann_conf_dir }}/server_host`  \
+        --port=`cat {{ riemann_conf_dir }}/server_port`
+        
+- name: Configure riemann-health service
+  service: name=riemann-health state=started enabled=yes
+  

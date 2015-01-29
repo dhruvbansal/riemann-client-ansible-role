@@ -1,0 +1,8 @@
+---
+
+riemann_server_host: 127.0.0.1
+riemann_server_port: 5555
+
+riemann_conf_dir: /etc/riemann
+riemann_user:  riemann
+riemann_group: riemann

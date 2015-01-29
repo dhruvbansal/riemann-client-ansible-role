@@ -1,0 +1,51 @@
+# $ riemann-nginx-status --help
+# Options:
+#   -h, --host=<s>                Riemann host (default: 127.0.0.1)
+#   -p, --port=<i>                Riemann port (default: 5555)
+#   -e, --event-host=<s>          Event hostname
+#   -i, --interval=<i>            Seconds between updates (default: 5)
+#   -t, --tag=<s>                 Tag to add to events
+#   -l, --ttl=<i>                 TTL for events
+#   -a, --attribute=<s>           Attribute to add to the event
+#   -m, --timeout=<i>             Timeout (in seconds) when waiting for
+#                                 acknowledgements (default: 30)
+#   -c, --tcp, --no-tcp           Use TCP transport instead of UDP (improves
+#                                 reliability, slight overhead. (Default: true)
+#   -u, --uri=<s>                 Nginx Stub Status URI (default:
+#                                 http://localhost:8080/nginx_status)
+#   -k, --checks=<s+>             Which metrics to report. (Default: active,
+#                                 accepted, handled, requests, reading, writing,
+#                                 waiting)
+#   -v, --active-warning=<i>      Active connections warning threshold (default:
+#                                 0)
+#   -r, --active-critical=<i>     Active connections critical threshold (default:
+#                                 0)
+#   -d, --reading-warning=<i>     Reading connections warning threshold (default:
+#                                 0)
+#   -n, --reading-critical=<i>    Reading connections critical threshold
+#                                 (default: 0)
+#   -w, --writing-warning=<i>     Writing connections warning threshold (default:
+#                                 0)
+#   -g, --writing-critical=<i>    Writing connections critical threshold
+#                                 (default: 0)
+#   --waiting-warning=<i>         Waiting connections warning threshold (default:
+#                                 0)
+#   --waiting-critical=<i>        Waiting connections critical threshold
+#                                 (default: 0)
+#   --help                        Show this message
+
+- name: Enable riemann-nginx service
+  when: ansible_os_family == "Debian"
+  template: src="tool-upstart.conf.j2" dest=/etc/init/riemann-nginx.conf owner=root group=root mode=0644
+  with_items:
+    - description: riemann-nginx
+      command: |
+        riemann-nginx-status                             \
+        --host=`cat {{ riemann_conf_dir }}/server_host`  \
+        --port=`cat {{ riemann_conf_dir }}/server_port`  \
+        --event-host=`hostname`                          \
+        --uri="{{ nginx_status_uri }}"
+        
+- name: Configure riemann-nginx service
+  service: name=riemann-nginx state=started enabled=yes
+  
